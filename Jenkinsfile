@@ -81,6 +81,19 @@ pipeline {
                     aws ecs update-service --cluster ${ECS_CLUSTER} --service ${ECS_SERVICE} \
                              --task-definition ${NEW_ARN}
                     aws ecs wait services-stable --cluster ${ECS_CLUSTER} --services ${ECS_SERVICE}
+					aws ecs wait services-stable --cluster ${ECS_CLUSTER} --services ${ECS_SERVICE}
+
+					# stable is not the same as "my version is running"
+					CURRENT=$(aws ecs describe-services --cluster ${ECS_CLUSTER} --services ${ECS_SERVICE} \
+							--query 'services[0].taskDefinition' --output text)
+
+					if [ "$CURRENT" != "$NEW_ARN" ]; then
+						echo "DEPLOY FAILED: service is running $CURRENT but we deployed $NEW_ARN (rolled back?)"
+						aws ecs describe-services --cluster ${ECS_CLUSTER} --services ${ECS_SERVICE} \
+							--query 'services[0].events[:5].message' --output text
+						exit 1
+					fi
+					echo "Deploy verified: service is on $NEW_ARN"
                 '''
             }
         }
