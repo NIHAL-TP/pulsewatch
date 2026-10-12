@@ -93,10 +93,9 @@ pipeline {
 							--query 'services[0].events[:5].message' --output text
 						STOPPED=$(   aws ecs list-tasks --cluster pulsewatch-cluster --desired-status STOPPED \
      						--query 'taskArns[:5]' --output text)
-						[ -n "$STOPPED" ] && aws ecs describe-tasks --cluster ${ECS_CLUSTER} --tasks $STOPPED \
-								--query 'tasks[].stoppedReason' --output textaws ecs describe-services --cluster ${ECS_CLUSTER} --services ${ECS_SERVICE} \
-								--query 'services[0].deployments[].[status,rolloutState,rolloutStateReason,failedTasks,taskDefinition]' \
-								--output text
+						[ -n "$STOPPED" ] && aws ecs describe-services --cluster ${ECS_CLUSTER} --services ${ECS_SERVICE} \
+							--query 'services[0].deployments[].[status,rolloutState,rolloutStateReason,failedTasks,taskDefinition]' \
+							--output text
 						exit 1
 					fi
 					echo "Deploy verified: service is on $NEW_ARN"
