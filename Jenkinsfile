@@ -15,13 +15,13 @@ pipeline {
     }
 
     stages {
-        stage('git checkout') {
+        /* stage('git checkout') {
             steps {
                 git credentialsId: 'github',
                     url: 'https://github.com/NIHAL-TP/pulsewatch',
                     branch: 'main'
             }
-        }
+        } */
 
         stage('prepare') {
             steps {
@@ -49,7 +49,7 @@ pipeline {
                 sh '''
                     docker run -d --name pw-${BUILD_NUMBER} ${IMAGE}
                     for i in $(seq 1 15); do
-                        docker exec pw-${BUILD_NUMBER} python -c "import urllib.request as u; u.urlopen('http://localhost:5000/health')" && exit 0
+                        docker exec pw-${BUILD_NUMBER} python -c "import urllib.request as u; u.urlopen('http://localhost:5000/healthz')" && exit 0
                         sleep 2
                     done
                     echo "health check never succeeded"
