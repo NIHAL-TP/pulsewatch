@@ -55,7 +55,7 @@ def index():
     )
 
 
-@app.route("/health")
+@app.route("/healthz")
 def health():
     return jsonify(status="ok")
 
