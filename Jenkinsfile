@@ -91,6 +91,10 @@ pipeline {
 						echo "DEPLOY FAILED: service is running $CURRENT but we deployed $NEW_ARN (rolled back?)"
 						aws ecs describe-services --cluster ${ECS_CLUSTER} --services ${ECS_SERVICE} \
 							--query 'services[0].events[:5].message' --output text
+						STOPPED=$(aws ecs list-tasks --cluster ${ECS_CLUSTER} --service-name ${ECS_SERVICE} \
+								--desired-status STOPPED --query 'taskArns[:3]' --output text)
+						[ -n "$STOPPED" ] && aws ecs describe-tasks --cluster ${ECS_CLUSTER} --tasks $STOPPED \
+								--query 'tasks[].stoppedReason' --output text
 						exit 1
 					fi
 					echo "Deploy verified: service is on $NEW_ARN"
