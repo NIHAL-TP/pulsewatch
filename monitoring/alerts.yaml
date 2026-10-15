@@ -1,0 +1,47 @@
+groups:
+  - name: pulsewatch
+    rules:
+      - alert: TargetDown
+        expr: up{job="pulsewatch"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Target {{ $labels.instance }} is down"
+          description: "Prometheus cannot scrape {{ $labels.instance }} for over 1 minute."
+
+      - alert: NoTargets
+        expr: absent(up{job="pulsewatch"})
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No pulsewatch targets discovered"
+          description: "DNS returns no tasks. The service may be at 0 tasks or Cloud Map is empty."
+
+      - alert: HighErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[1m])) or vector(0)) / sum(rate(http_requests_total[1m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "5xx error rate above 5%"
+          description: "Error ratio is {{ $value | humanizePercentage }} over the last minute."
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 latency above 1s"
+          description: "p95 latency is {{ $value | humanizeDuration }}."
+
+      - alert: ServiceAtMaxCapacity
+        expr: count(up{job="pulsewatch"} == 1) >= 4
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service has been at max task count for 10 minutes"
+          description: "Autoscaling cannot add more tasks. Consider raising the max or optimizing the app."
